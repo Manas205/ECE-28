@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { Analytics } from "@vercel/analytics/react";
 import {
   Eye,
   Search,
@@ -180,6 +181,7 @@ export default function App() {
           )}
         </section>
       </main>
+      <Analytics />
     </div>
   );
 }
