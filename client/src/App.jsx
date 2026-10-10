@@ -132,38 +132,42 @@ export default function App() {
         >
           {selected ? (
             <>
-              <div className="flex flex-wrap items-center gap-2 border-b px-3 py-2">
-                <button
-                  onClick={() => setMobileView("tree")}
-                  className="flex items-center gap-1 rounded-md px-2 py-1 text-sm text-gray-600 hover:bg-gray-100 md:hidden"
-                >
-                  <ArrowLeft size={16} /> Back
-                </button>
+              <div className="flex items-center gap-2 border-b px-3 py-2">
+  <button
+    onClick={() => setMobileView("tree")}
+    className="flex items-center gap-1 rounded-md px-2 py-1 text-sm text-gray-600 hover:bg-gray-100 md:hidden"
+  >
+    <ArrowLeft size={16} /> Back
+  </button>
 
-                <div className="flex min-w-0 flex-1 items-center gap-1 text-sm text-gray-500">
-                  {selected.path.slice(1).map((p, i) => (
-                    <span key={i} className="flex shrink-0 items-center gap-1">
-                      {p} <ChevronRight size={14} />
-                    </span>
-                  ))}
-                  <span className="truncate font-medium text-gray-800">{selected.name}</span>
-                </div>
+  {/* Breadcrumb: desktop only */}
+  <div className="hidden min-w-0 flex-1 items-center gap-1 text-sm text-gray-500 md:flex">
+    {selected.path.slice(1).map((p, i) => (
+      <span key={i} className="flex shrink-0 items-center gap-1">
+        {p} <ChevronRight size={14} />
+      </span>
+    ))}
+    <span className="truncate font-medium text-gray-800">{selected.name}</span>
+  </div>
 
-                <a
-                  href={`https://drive.google.com/uc?export=download&id=${selected.id}`}
-                  className="flex items-center gap-1 rounded-md border px-3 py-1.5 text-sm hover:bg-gray-50"
-                >
-                  <Download size={15} /> Download
-                </a>
-                <a
-                  href={`https://drive.google.com/file/d/${selected.id}/view`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="flex items-center gap-1 rounded-md border px-3 py-1.5 text-sm hover:bg-gray-50"
-                >
-                  <ExternalLink size={15} /> Open
-                </a>
-              </div>
+  {/* Buttons */}
+  <div className="ml-auto flex shrink-0 gap-2">
+    <a
+      href={`https://drive.google.com/uc?export=download&id=${selected.id}`}
+      className="flex items-center gap-1 rounded-md border px-3 py-1.5 text-sm hover:bg-gray-50"
+    >
+      <Download size={15} /> Download
+    </a>
+    <a
+      href={`https://drive.google.com/file/d/${selected.id}/view`}
+      target="_blank"
+      rel="noreferrer"
+      className="flex items-center gap-1 rounded-md border px-3 py-1.5 text-sm hover:bg-gray-50"
+    >
+      <ExternalLink size={15} /> Open
+    </a>
+  </div>
+</div>
 
               <iframe
                 key={selected.id}
