@@ -60,7 +60,25 @@ export default function App() {
     <div className="flex h-screen flex-col bg-gray-50">
       {/* Header */}
       <header className="flex flex-col gap-3 border-b bg-white px-4 py-3 md:flex-row md:items-center md:justify-between md:px-6 md:py-4">
-        <h1 className="text-xl font-semibold">My Drive</h1>
+        <div className="flex items-center justify-between gap-3 md:justify-start">
+  <h1 className="text-xl font-semibold">My Drive</h1>
+  <a
+    href="https://ece27ftw.vercel.app"
+    target="_blank"
+    rel="noreferrer"
+    className="flex items-center gap-1 rounded-md border px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-50"
+  >
+    ECE'27 <ExternalLink size={14} />
+  </a>
+  <a
+  href="https://forms.gle/FNzRZtw3486pYd3s9"
+  target="_blank"
+  rel="noreferrer"
+  className="flex items-center gap-1 rounded-md bg-blue-600 px-3 py-1.5 text-sm text-white hover:bg-blue-700"
+>
+  Ask a doubt <ExternalLink size={14} />
+</a>
+</div>
         <div className="relative w-full md:w-80">
           <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
           <input
