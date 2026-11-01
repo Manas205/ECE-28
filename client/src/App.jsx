@@ -9,6 +9,7 @@ import {
   ArrowLeft,
   ChevronRight,
   FileText,
+  Clock,
 } from "lucide-react";
 import TreeNode from "./components/TreeNode";
 
@@ -23,12 +24,24 @@ function flatten(node, path = []) {
   return [{ ...node, path }];
 }
 
+const RECENT_KEY = "recentFiles";
+const MAX_RECENT = 5;
+
+function loadRecent() {
+  try {
+    return JSON.parse(localStorage.getItem(RECENT_KEY)) || [];
+  } catch {
+    return [];
+  }
+}
+
 export default function App() {
   const [tree, setTree] = useState(null);
   const [selected, setSelected] = useState(null);
   const [error, setError] = useState("");
   const [query, setQuery] = useState("");
   const [mobileView, setMobileView] = useState("tree"); // "tree" | "preview"
+  const [recent, setRecent] = useState(loadRecent);
 
   useEffect(() => {
     fetch(`${API}/api/drive`)
@@ -38,6 +51,12 @@ export default function App() {
   }, []);
 
   const files = useMemo(() => (tree ? flatten(tree) : []), [tree]);
+
+  // Only keep recent items whose files still exist in Drive
+  const recentFiles = useMemo(
+    () => recent.map((r) => files.find((f) => f.id === r.id)).filter(Boolean),
+    [recent, files]
+  );
 
   const results = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -52,33 +71,52 @@ export default function App() {
   }, [query, files]);
 
   function selectFile(item) {
-    setSelected(files.find((f) => f.id === item.id) || item);
+    const file = files.find((f) => f.id === item.id) || item;
+    setSelected(file);
     setMobileView("preview");
+    setRecent((prev) => {
+      const next = [
+        { id: file.id, name: file.name },
+        ...prev.filter((r) => r.id !== file.id),
+      ].slice(0, MAX_RECENT);
+      try {
+        localStorage.setItem(RECENT_KEY, JSON.stringify(next));
+      } catch {}
+      return next;
+    });
+  }
+
+  function clearRecent() {
+    setRecent([]);
+    try {
+      localStorage.removeItem(RECENT_KEY);
+    } catch {}
   }
 
   return (
     <div className="flex h-screen flex-col bg-gray-50">
       {/* Header */}
       <header className="flex flex-col gap-3 border-b bg-white px-4 py-3 md:flex-row md:items-center md:justify-between md:px-6 md:py-4">
-        <div className="flex items-center justify-between gap-3 md:justify-start">
-  <h1 className="text-xl font-semibold">ECE'28 PEC Study Material</h1>
-  <a
-    href="https://ece27ftw.vercel.app"
-    target="_blank"
-    rel="noreferrer"
-    className="flex items-center gap-1 rounded-md border px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-50"
-  >
-    ECE'27 <ExternalLink size={14} />
-  </a>
-  <a
-  href="https://forms.gle/FNzRZtw3486pYd3s9"
-  target="_blank"
-  rel="noreferrer"
-  className="flex items-center gap-1 rounded-md bg-blue-600 px-3 py-1.5 text-sm text-white hover:bg-blue-700"
->
-  Ask a doubt <ExternalLink size={14} />
-</a>
-</div>
+        <div className="flex flex-wrap items-center justify-between gap-3 md:justify-start">
+          <h1 className="text-xl font-semibold">ECE'28 PEC Study Material</h1>
+          <a
+            href="https://ece27ftw.vercel.app"
+            target="_blank"
+            rel="noreferrer"
+            className="flex items-center gap-1 rounded-md border px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-50"
+          >
+            ECE'27 <ExternalLink size={14} />
+          </a>
+          <a
+            href="https://forms.gle/FNzRZtw3486pYd3s9"
+            target="_blank"
+            rel="noreferrer"
+            className="flex items-center gap-1 rounded-md bg-blue-600 px-3 py-1.5 text-sm text-white hover:bg-blue-700"
+          >
+            Ask a doubt <ExternalLink size={14} />
+          </a>
+        </div>
+
         <div className="relative w-full md:w-80">
           <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
           <input
@@ -112,6 +150,33 @@ export default function App() {
 
           {error && <p className="text-sm text-red-600">{error}</p>}
           {!tree && !error && <p className="text-sm text-gray-500">Loading...</p>}
+
+          {/* Recently viewed */}
+          {!results && recentFiles.length > 0 && (
+            <div className="mb-4 border-b pb-3">
+              <div className="mb-2 flex items-center justify-between">
+                <h3 className="flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-gray-400">
+                  <Clock size={14} /> Recently viewed
+                </h3>
+                <button
+                  onClick={clearRecent}
+                  className="text-xs text-gray-400 hover:text-red-500 hover:underline"
+                >
+                  Clear
+                </button>
+              </div>
+              {recentFiles.map((f) => (
+                <button
+                  key={f.id}
+                  onClick={() => selectFile(f)}
+                  className="flex w-full items-center gap-2 rounded-md p-2 text-left text-sm text-gray-800 hover:bg-gray-100"
+                >
+                  <FileText size={16} className="shrink-0 text-gray-500" />
+                  <span className="truncate">{f.name}</span>
+                </button>
+              ))}
+            </div>
+          )}
 
           {results ? (
             results.length === 0 ? (
@@ -151,41 +216,41 @@ export default function App() {
           {selected ? (
             <>
               <div className="flex items-center gap-2 border-b px-3 py-2">
-  <button
-    onClick={() => setMobileView("tree")}
-    className="flex items-center gap-1 rounded-md px-2 py-1 text-sm text-gray-600 hover:bg-gray-100 md:hidden"
-  >
-    <ArrowLeft size={16} /> Back
-  </button>
+                <button
+                  onClick={() => setMobileView("tree")}
+                  className="flex items-center gap-1 rounded-md px-2 py-1 text-sm text-gray-600 hover:bg-gray-100 md:hidden"
+                >
+                  <ArrowLeft size={16} /> Back
+                </button>
 
-  {/* Breadcrumb: desktop only */}
-  <div className="hidden min-w-0 flex-1 items-center gap-1 text-sm text-gray-500 md:flex">
-    {selected.path.slice(1).map((p, i) => (
-      <span key={i} className="flex shrink-0 items-center gap-1">
-        {p} <ChevronRight size={14} />
-      </span>
-    ))}
-    <span className="truncate font-medium text-gray-800">{selected.name}</span>
-  </div>
+                {/* Breadcrumb: desktop only */}
+                <div className="hidden min-w-0 flex-1 items-center gap-1 text-sm text-gray-500 md:flex">
+                  {selected.path.slice(1).map((p, i) => (
+                    <span key={i} className="flex shrink-0 items-center gap-1">
+                      {p} <ChevronRight size={14} />
+                    </span>
+                  ))}
+                  <span className="truncate font-medium text-gray-800">{selected.name}</span>
+                </div>
 
-  {/* Buttons */}
-  <div className="ml-auto flex shrink-0 gap-2">
-    <a
-      href={`https://drive.google.com/uc?export=download&id=${selected.id}`}
-      className="flex items-center gap-1 rounded-md border px-3 py-1.5 text-sm hover:bg-gray-50"
-    >
-      <Download size={15} /> Download
-    </a>
-    <a
-      href={`https://drive.google.com/file/d/${selected.id}/view`}
-      target="_blank"
-      rel="noreferrer"
-      className="flex items-center gap-1 rounded-md border px-3 py-1.5 text-sm hover:bg-gray-50"
-    >
-      <ExternalLink size={15} /> Open
-    </a>
-  </div>
-</div>
+                {/* Buttons */}
+                <div className="ml-auto flex shrink-0 gap-2">
+                  <a
+                    href={`https://drive.google.com/uc?export=download&id=${selected.id}`}
+                    className="flex items-center gap-1 rounded-md border px-3 py-1.5 text-sm hover:bg-gray-50"
+                  >
+                    <Download size={15} /> Download
+                  </a>
+                  <a
+                    href={`https://drive.google.com/file/d/${selected.id}/view`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex items-center gap-1 rounded-md border px-3 py-1.5 text-sm hover:bg-gray-50"
+                  >
+                    <ExternalLink size={15} /> Open
+                  </a>
+                </div>
+              </div>
 
               <iframe
                 key={selected.id}
