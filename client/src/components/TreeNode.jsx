@@ -28,8 +28,10 @@ export default function TreeNode({ item, depth = 0, selectedId, onSelect }) {
       <button
         onClick={() => (isFolder ? setOpen(!open) : onSelect(item))}
         style={{ paddingLeft: depth * 16 + 8 }}
-        className={`flex w-full items-center gap-2 rounded-md py-2 pr-2 text-left text-sm hover:bg-gray-100 ${
-          isSelected ? "bg-blue-50 text-blue-700" : "text-gray-800"
+        className={`flex w-full items-center gap-2 rounded-md py-2 pr-2 text-left text-sm ${
+          isSelected
+            ? "bg-blue-50 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300"
+            : "text-gray-800 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-800"
         }`}
       >
         {isFolder ? (
@@ -37,7 +39,10 @@ export default function TreeNode({ item, depth = 0, selectedId, onSelect }) {
         ) : (
           <span className="w-4" />
         )}
-        <Icon size={18} className={isFolder ? "text-blue-500" : "text-gray-500"} />
+        <Icon
+          size={18}
+          className={isFolder ? "text-blue-500" : "text-gray-500 dark:text-gray-400"}
+        />
         <span className="flex-1 truncate">{item.name}</span>
         {!isFolder && item.size && (
           <span className="shrink-0 text-xs text-gray-400">{item.size}</span>

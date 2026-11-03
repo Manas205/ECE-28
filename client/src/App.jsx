@@ -10,6 +10,8 @@ import {
   ChevronRight,
   FileText,
   Clock,
+  Sun,
+  Moon,
 } from "lucide-react";
 import TreeNode from "./components/TreeNode";
 
@@ -42,6 +44,9 @@ export default function App() {
   const [query, setQuery] = useState("");
   const [mobileView, setMobileView] = useState("tree"); // "tree" | "preview"
   const [recent, setRecent] = useState(loadRecent);
+  const [dark, setDark] = useState(() =>
+    document.documentElement.classList.contains("dark")
+  );
 
   useEffect(() => {
     fetch(`${API}/api/drive`)
@@ -49,6 +54,15 @@ export default function App() {
       .then((d) => (d.error ? setError(d.error) : setTree(d)))
       .catch(() => setError("Could not reach the server"));
   }, []);
+
+  function toggleTheme() {
+    const next = !dark;
+    setDark(next);
+    document.documentElement.classList.toggle("dark", next);
+    try {
+      localStorage.setItem("theme", next ? "dark" : "light");
+    } catch {}
+  }
 
   const files = useMemo(() => (tree ? flatten(tree) : []), [tree]);
 
@@ -94,16 +108,16 @@ export default function App() {
   }
 
   return (
-    <div className="flex h-screen flex-col bg-gray-50">
+    <div className="flex h-screen flex-col bg-gray-50 text-gray-900 dark:bg-gray-950 dark:text-gray-100">
       {/* Header */}
-      <header className="flex flex-col gap-3 border-b bg-white px-4 py-3 md:flex-row md:items-center md:justify-between md:px-6 md:py-4">
+      <header className="flex flex-col gap-3 border-b bg-white px-4 py-3 dark:border-gray-700 dark:bg-gray-900 md:flex-row md:items-center md:justify-between md:px-6 md:py-4">
         <div className="flex flex-wrap items-center justify-between gap-3 md:justify-start">
           <h1 className="text-xl font-semibold">ECE'28 PEC Study Material</h1>
           <a
             href="https://ece27ftw.vercel.app"
             target="_blank"
             rel="noreferrer"
-            className="flex items-center gap-1 rounded-md border px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-50"
+            className="flex items-center gap-1 rounded-md border px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
           >
             ECE'27 <ExternalLink size={14} />
           </a>
@@ -117,30 +131,44 @@ export default function App() {
           </a>
         </div>
 
-        <div className="relative w-full md:w-80">
-          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-          <input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search files and folders..."
-            className="w-full rounded-lg border bg-gray-50 py-2 pl-9 pr-9 text-sm outline-none focus:border-blue-400 focus:bg-white"
-          />
-          {query && (
-            <button
-              onClick={() => setQuery("")}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-              aria-label="Clear search"
-            >
-              <X size={16} />
-            </button>
-          )}
+        <div className="flex w-full items-center gap-2 md:w-auto">
+          <div className="relative flex-1 md:w-80 md:flex-none">
+            <Search
+              size={16}
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+            />
+            <input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search files and folders..."
+              className="w-full rounded-lg border bg-gray-50 py-2 pl-9 pr-9 text-sm outline-none focus:border-blue-400 focus:bg-white dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-400 dark:focus:bg-gray-800"
+            />
+            {query && (
+              <button
+                onClick={() => setQuery("")}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                aria-label="Clear search"
+              >
+                <X size={16} />
+              </button>
+            )}
+          </div>
+
+          <button
+            onClick={toggleTheme}
+            className="shrink-0 rounded-lg border p-2 text-gray-600 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+            aria-label={dark ? "Switch to light mode" : "Switch to dark mode"}
+            title={dark ? "Light mode" : "Dark mode"}
+          >
+            {dark ? <Sun size={18} /> : <Moon size={18} />}
+          </button>
         </div>
       </header>
 
       <main className="flex flex-1 flex-col gap-4 overflow-hidden p-3 md:flex-row md:gap-6 md:p-6">
         {/* Sidebar */}
         <aside
-          className={`min-h-0 w-full flex-1 overflow-auto rounded-xl border bg-white p-4 md:w-96 md:flex-none md:shrink-0 ${
+          className={`min-h-0 w-full flex-1 overflow-auto rounded-xl border bg-white p-4 dark:border-gray-700 dark:bg-gray-900 md:w-96 md:flex-none md:shrink-0 ${
             mobileView === "preview" ? "hidden md:block" : "block"
           }`}
         >
@@ -149,11 +177,13 @@ export default function App() {
           </h2>
 
           {error && <p className="text-sm text-red-600">{error}</p>}
-          {!tree && !error && <p className="text-sm text-gray-500">Loading...</p>}
+          {!tree && !error && (
+            <p className="text-sm text-gray-500 dark:text-gray-400">Loading...</p>
+          )}
 
           {/* Recently viewed */}
           {!results && recentFiles.length > 0 && (
-            <div className="mb-4 border-b pb-3">
+            <div className="mb-4 border-b pb-3 dark:border-gray-700">
               <div className="mb-2 flex items-center justify-between">
                 <h3 className="flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-gray-400">
                   <Clock size={14} /> Recently viewed
@@ -169,9 +199,9 @@ export default function App() {
                 <button
                   key={f.id}
                   onClick={() => selectFile(f)}
-                  className="flex w-full items-center gap-2 rounded-md p-2 text-left text-sm text-gray-800 hover:bg-gray-100"
+                  className="flex w-full items-center gap-2 rounded-md p-2 text-left text-sm text-gray-800 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-800"
                 >
-                  <FileText size={16} className="shrink-0 text-gray-500" />
+                  <FileText size={16} className="shrink-0 text-gray-500 dark:text-gray-400" />
                   <span className="truncate">{f.name}</span>
                 </button>
               ))}
@@ -180,19 +210,24 @@ export default function App() {
 
           {results ? (
             results.length === 0 ? (
-              <p className="text-sm text-gray-500">No files found.</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">No files found.</p>
             ) : (
               results.map((f) => (
                 <button
                   key={f.id}
                   onClick={() => selectFile(f)}
-                  className={`flex w-full items-start gap-2 rounded-md p-2 text-left hover:bg-gray-100 ${
-                    selected?.id === f.id ? "bg-blue-50" : ""
+                  className={`flex w-full items-start gap-2 rounded-md p-2 text-left hover:bg-gray-100 dark:hover:bg-gray-800 ${
+                    selected?.id === f.id ? "bg-blue-50 dark:bg-blue-900/40" : ""
                   }`}
                 >
-                  <FileText size={18} className="mt-0.5 shrink-0 text-gray-500" />
+                  <FileText
+                    size={18}
+                    className="mt-0.5 shrink-0 text-gray-500 dark:text-gray-400"
+                  />
                   <span className="min-w-0">
-                    <span className="block truncate text-sm text-gray-800">{f.name}</span>
+                    <span className="block truncate text-sm text-gray-800 dark:text-gray-200">
+                      {f.name}
+                    </span>
                     <span className="block truncate text-xs text-gray-400">
                       {f.path.slice(1).join(" / ")}
                     </span>
@@ -209,35 +244,37 @@ export default function App() {
 
         {/* Preview */}
         <section
-          className={`min-h-0 flex-1 flex-col overflow-hidden rounded-xl border bg-white ${
+          className={`min-h-0 flex-1 flex-col overflow-hidden rounded-xl border bg-white dark:border-gray-700 dark:bg-gray-900 ${
             mobileView === "tree" ? "hidden md:flex" : "flex"
           }`}
         >
           {selected ? (
             <>
-              <div className="flex items-center gap-2 border-b px-3 py-2">
+              <div className="flex items-center gap-2 border-b px-3 py-2 dark:border-gray-700">
                 <button
                   onClick={() => setMobileView("tree")}
-                  className="flex items-center gap-1 rounded-md px-2 py-1 text-sm text-gray-600 hover:bg-gray-100 md:hidden"
+                  className="flex items-center gap-1 rounded-md px-2 py-1 text-sm text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800 md:hidden"
                 >
                   <ArrowLeft size={16} /> Back
                 </button>
 
                 {/* Breadcrumb: desktop only */}
-                <div className="hidden min-w-0 flex-1 items-center gap-1 text-sm text-gray-500 md:flex">
+                <div className="hidden min-w-0 flex-1 items-center gap-1 text-sm text-gray-500 dark:text-gray-400 md:flex">
                   {selected.path.slice(1).map((p, i) => (
                     <span key={i} className="flex shrink-0 items-center gap-1">
                       {p} <ChevronRight size={14} />
                     </span>
                   ))}
-                  <span className="truncate font-medium text-gray-800">{selected.name}</span>
+                  <span className="truncate font-medium text-gray-800 dark:text-gray-100">
+                    {selected.name}
+                  </span>
                 </div>
 
                 {/* Buttons */}
                 <div className="ml-auto flex shrink-0 gap-2">
                   <a
                     href={`https://drive.google.com/uc?export=download&id=${selected.id}`}
-                    className="flex items-center gap-1 rounded-md border px-3 py-1.5 text-sm hover:bg-gray-50"
+                    className="flex items-center gap-1 rounded-md border px-3 py-1.5 text-sm hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800"
                   >
                     <Download size={15} /> Download
                   </a>
@@ -245,7 +282,7 @@ export default function App() {
                     href={`https://drive.google.com/file/d/${selected.id}/view`}
                     target="_blank"
                     rel="noreferrer"
-                    className="flex items-center gap-1 rounded-md border px-3 py-1.5 text-sm hover:bg-gray-50"
+                    className="flex items-center gap-1 rounded-md border px-3 py-1.5 text-sm hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-800"
                   >
                     <ExternalLink size={15} /> Open
                   </a>
